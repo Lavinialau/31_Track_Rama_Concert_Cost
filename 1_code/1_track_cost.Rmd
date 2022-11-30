@@ -78,15 +78,6 @@ cost_previous <-
   read_csv("cost_previous.csv")
 
 
-# export current data source to keep a record for next round
-write.csv(
-  cost_new,
-  "cost_previous.csv",
-  na = "",
-  row.names = FALSE
-)
-
-
 # table join to locate difference
 compare_data <-
   cost_new %>%
@@ -115,6 +106,15 @@ if(nrow(compare_data) == 0) {
     as_raw_html()
   
 }
+
+
+# export current data source to keep a record for next round
+write.csv(
+  cost_new,
+  "cost_previous.csv",
+  na = "",
+  row.names = FALSE
+)
 
 
 ```

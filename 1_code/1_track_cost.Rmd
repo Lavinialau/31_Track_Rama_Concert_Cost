@@ -1,0 +1,128 @@
+---
+title: Track Concert Cost
+output: blastula::blastula_email
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+
+
+# library ----------------------
+library(tidyverse)
+library(readxl)
+library(lubridate)
+library(gt)
+
+
+# location and file ------------------------
+
+# location
+folder_cost <-  
+   "C:\\Users\\llau\\Gateway Casinos\\Analytics - Automation - Documents\\Concert Cost"     # update!!
+
+
+# filename
+fname <- "Forecast PNL Spreadsheet - template.xlsx"
+
+
+```
+
+
+## How old is the concert cost document?
+
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, error = TRUE, results='asis'}
+
+# modified time
+mtime <- 
+  as.Date(file.info(file.path(folder_cost, fname))$mtime)
+
+
+# how many days without changes
+days_no_change <- Sys.Date() - as.Date(mtime) + 1
+
+
+```
+<b>The cost documentation was updated on `r mtime` (i.e. `r days_no_change` days ago).</b>
+
+
+PS: Sometimes the sharepoint sync got issues, or simply Entertainment Team forgot to update the cost for long. Check the data in [sharepoint](https://gwcasinos.sharepoint.com/:f:/s/Analytics-Automation/EmFOiL8C39BFgZfSfFr6E7kBV2CGrxdcekg80PWhEWDsvg) directly if the document hasn't been updated for more than 14 days.
+
+
+## Concerts with updated artist fee
+
+
+```{r echo=FALSE, warning=FALSE, message=FALSE, error = TRUE, results='asis'}
+
+# Add error=TRUE, so that error is shown without stopping R.
+
+
+# import cost from sharepoint
+# PS: use fill in case user forget to fill in the event code
+# PS: only interested in actual artist fee, because user will fill in that cost once all cost are finalized
+cost_new <-
+  read_excel(file.path(folder_cost, fname)) %>%
+  rowid_to_column() %>%                                    # easier to locate issue
+  fill(`Event #`) %>%                                      # in case they forgot to fill in event code
+  filter(Type %in% c("Actual"),
+         !is.na(`Artist Fee`)) %>%                        # exclude dummy data                
+  select(rowid,
+         `Event #`,
+         Type,
+         `Artist Fee`) %>% 
+  mutate(`Artist Fee` = as.numeric(`Artist Fee`))        # to align with csv format later
+
+
+# import previous version
+cost_previous <-
+  read_csv("cost_previous.csv")
+
+
+# export current data source to keep a record for next round
+write.csv(
+  cost_new,
+  "cost_previous.csv",
+  na = "",
+  row.names = FALSE
+)
+
+
+# table join to locate difference
+compare_data <-
+  cost_new %>%
+  left_join(
+    cost_previous %>% select(-rowid),
+    by = c("Event #", "Type"),
+    suffix = c("_New", "_Old")
+  ) %>%
+  mutate(across(starts_with("Artist"),                       # for comparison of differece later
+                ~ ifelse(is.na(.x), 0, .x)))
+
+
+# data with different artist fee
+compare_data <-
+  compare_data %>% 
+  filter(`Artist Fee_Old` != `Artist Fee_New`)
+
+
+
+# display difference
+if(nrow(compare_data) == 0) {
+  print("No update on artist cost")
+} else {
+  compare_data %>%
+    gt() %>%
+    as_raw_html()
+  
+}
+
+
+```
+
+
+
+
+
+
+
+  

@@ -21,7 +21,7 @@ setwd("C:\\Users\\Public\\Track_Rama_Concert_Cost")
 
 
 # folder
-folder_rmd <- "1_code"
+folder_rmd <- "1_rmd"
 
 
 
@@ -47,7 +47,7 @@ Sys.setenv(RSTUDIO_PANDOC = pandoc_path_temp)
 # email -------------------------
 
 # rmarkdown
-email <- render_email(file.path(folder_rmd, "1_track_cost.Rmd"))
+email <- render_email(file.path(folder_rmd, "track_cost.Rmd"))
 
 
 # send email

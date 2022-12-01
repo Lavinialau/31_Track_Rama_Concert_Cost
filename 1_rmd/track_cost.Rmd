@@ -11,6 +11,8 @@ library(tidyverse)
 library(readxl)
 library(lubridate)
 library(gt)
+library(glue)
+library(DirectMktPkg)
 
 
 # location and file ------------------------
@@ -19,9 +21,11 @@ library(gt)
 folder_cost <-  
    "C:\\Users\\llau\\Gateway Casinos\\Analytics - Automation - Documents\\Concert Cost"     # update!!
 
+folder_rmd <- "1_rmd"
 
 # filename
 fname <- "Forecast PNL Spreadsheet - template.xlsx"
+
 
 
 ```
@@ -74,8 +78,22 @@ cost_new <-
 
 
 # import previous version
-cost_previous <-
-  read_csv("cost_previous.csv")
+path_previous <- 
+  "C:\\Users\\Public\\Track_Rama_Concert_Cost\\1_rmd"
+
+fname_previous <-
+  latest.files(path_previous,
+               "cost_previous",
+               .n = 1)$Fname                # latest fname
+
+cost_previous <- read_csv(fname_previous)
+
+
+# export current data source to keep a record for next round
+write.csv(cost_new,
+          glue("cost_previous_{format(Sys.time(), '%Y%m%d_%H%M')}.csv"),
+          na = "",
+          row.names = FALSE)
 
 
 # table join to locate difference
@@ -107,14 +125,6 @@ if(nrow(compare_data) == 0) {
   
 }
 
-
-# export current data source to keep a record for next round
-write.csv(
-  cost_new,
-  "cost_previous.csv",
-  na = "",
-  row.names = FALSE
-)
 
 
 ```
